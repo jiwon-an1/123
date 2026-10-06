@@ -1,9 +1,9 @@
 /* Browser-local ACO model. Time: minutes; length: km; speed: km/h. */
 (function(root){
 'use strict';
-const nodes=[{id:'H',x:85,y:255,name:'병원'},{id:'A1',x:245,y:100,name:'북문'},{id:'A2',x:505,y:100,name:'시청'},{id:'B1',x:270,y:255,name:'중앙역'},{id:'B2',x:490,y:255,name:'시장'},{id:'C1',x:230,y:430,name:'공원'},{id:'C2',x:530,y:430,name:'강변'},{id:'D',x:710,y:255,name:'사고 현장'}];
-const routes={A:['H','A1','A2','D'],B:['H','B1','B2','D'],C:['H','C1','C2','D']};
-function defaults(){return Object.entries(routes).flatMap(([r,ns])=>ns.slice(0,-1).map((n,i)=>({id:r+(i+1),from:n,to:ns[i+1],route:r,length:({A:[.8,.8,.8],B:[1,1.1,1],C:[1.1,1.3,1.1]})[r][i],speed:30,wait:({A:[144,144,144],B:[56,56,56],C:[80,80,80]})[r][i],congestion:1,closed:false,tau:1})));}
+const nodes=[{id:'H',x:45,y:320,name:'병원'},{id:'A1',x:270,y:160,name:'북문'},{id:'A2',x:530,y:160,name:'시청'},{id:'B1',x:270,y:260,name:'중앙역'},{id:'B2',x:530,y:260,name:'시장'},{id:'C1',x:270,y:380,name:'공원'},{id:'C2',x:530,y:380,name:'강변'},{id:'D1',x:270,y:60,name:'대학교'},{id:'D2',x:530,y:60,name:'과학관'},{id:'E1',x:270,y:480,name:'도서관'},{id:'E2',x:530,y:480,name:'체육관'},{id:'F1',x:270,y:580,name:'물류센터'},{id:'F2',x:530,y:580,name:'남문'},{id:'D',x:755,y:320,name:'사고 현장'}];
+const routes={A:['H','A1','A2','D'],B:['H','B1','B2','D'],C:['H','C1','C2','D'],D:['H','D1','D2','D'],E:['H','E1','E2','D'],F:['H','F1','F2','D']};
+function defaults(){return Object.entries(routes).flatMap(([r,ns])=>ns.slice(0,-1).map((n,i)=>({id:r+(i+1),from:n,to:ns[i+1],route:r,length:({A:[.8,.8,.8],B:[1,1.1,1],C:[1.1,1.3,1.1],D:[1.3,1.4,1.3],E:[1.5,1.6,1.5],F:[1.6,1.8,1.6]})[r][i],speed:30,wait:({A:[144,144,144],B:[56,56,56],C:[80,80,80],D:[100,100,100],E:[96,96,96],F:[120,120,120]})[r][i],congestion:1,closed:false,tau:1})));}
 const time=e=>e.length/(e.speed/e.congestion)*60+e.wait/60;
 function evaluate(ids,edges){const es=ids.map(id=>edges.find(e=>e.id===id));return {ids:[...ids],time:es.some(e=>!e||e.closed)?Infinity:es.reduce((s,e)=>s+time(e),0),distance:es.reduce((s,e)=>s+(e?e.length:0),0)};}
 function choices(node,visited,edges,alpha,beta){const es=edges.filter(e=>!e.closed&&(e.from===node||e.to===node)&&!visited.includes(e.from===node?e.to:e.from));const logs=es.map(e=>alpha*Math.log(Math.max(e.tau,1e-12))-beta*Math.log(time(e)));const max=Math.max(...logs);const weights=logs.map(v=>Math.exp(v-max));const sum=weights.reduce((a,b)=>a+b,0);return es.map((e,i)=>({id:e.id,next:e.from===node?e.to:e.from,p:weights[i]/sum,time:time(e)}));}
